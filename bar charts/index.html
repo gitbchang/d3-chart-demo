@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Learning D3</title>
+	<link rel="stylesheet" href="main.css">
+	<script  type="text/javascript" src="d3.min.js"></script>
+</head>
+<body>
+<!--Place all DOM elements here -->
+<script>
+var w = 800;
+var h = 450;
+// adjust margins to see labels better
+var margin = {
+	top: 20,
+	bottom: 40,
+	left: 80,
+	right: 20
+};
+var width = w - margin.left - margin.right;
+var height = h - margin.top - margin.bottom;
+
+// var data = [132,71,337,93,78,43,20,16,30,8,17,21];
+var data = [
+	{key: "Glazed",		value: 132},
+	{key: "Jelly",		value: 71},
+	{key: "Holes",		value: 337},
+	{key: "Sprinkles",	value: 93},
+	{key: "Crumb",		value: 78},
+	{key: "Chocolate",	value: 43},
+	{key: "Coconut", 	value: 20},
+	{key: "Cream",		value: 16},
+	{key: "Cruller", 	value: 30},
+	{key: "Éclair", 	value: 8},
+	{key: "Fritter", 	value: 17},
+	{key: "Bearclaw", 	value: 21}
+];
+
+
+// This is how we scale our data to the container
+var x = d3.scale.linear()
+			// we need to give domain an array of 2 numbers. low and highest
+			.domain([0, d3.max(data, function(d){
+				// d stands for the individual piece of data we are looking at
+				return d.value;
+			})])
+			// scale to the width
+			.range([0, width]);
+var y = d3.scale.ordinal()
+		// domain for y axis is 0 to number of elements in array
+		.domain (data.map(function(entry){
+			return entry.key;
+		}))
+		// scale to the height
+		// rangeBands will make distinct values. USE WITH ORDINAL
+		.rangeBands([0, height]);
+// Use linear color scale to get a gradient of a SINGLE COLOR
+// var linearColorScale = d3.scale.linear()
+// 						.domain([0, data.length])
+// 						.range(["#572500", "#F68026"]);
+
+// use ordinal color scale for DIFFERENT COLORS EACH BAR
+var ordinalColorScale = d3.scale.category20();
+
+var xAxis = d3.svg.axis()
+			.scale(x)
+			.orient('bottom');
+var yAxis = d3.svg.axis()
+			.scale(y)
+			.orient('left');
+
+var svg = d3.select("body").append("svg")
+			.attr("id", "chart")
+			.attr("width", w)
+			.attr("height", h);
+// We are making a group here to display our chart within. Groups are like divs
+var chart = svg.append('g')
+				.classed('display', true)
+				.attr('transform', "translate("+ margin.left +"," + margin.top + ")");
+
+function plot(params){
+	console.log(this);
+	// we are using this here because we applied the method 'plot.call' down below. this will refer to svg, which is the first arg
+	// svg.selectAll(".bar")
+	this.selectAll(".bar")	
+	.data(params.data)
+	// first time we are entering data
+	.enter()
+	// appending a rectangle for each element in the data array
+		.append("rect")
+		// if true, will add the class name, if false - will remove
+		.classed("bar", true)
+		.attr("x", 0)
+		.attr("y", function(d,i){
+			// This will stagger the bars top to bottom
+			return y(d.key);
+		})
+		.attr('width', function(d,i){
+			//d is for data bound to element
+			// i is the index of the element
+			return x(d.value);
+		})
+		.attr('height', function(d, i){
+			return y.rangeBand()-1;
+		})
+		.style('fill', function(d,i){
+			return ordinalColorScale(i);
+		});
+
+this.selectAll('.bar-label')
+	.data(params.data)
+	.enter()
+		.append("text")
+		.classed('bar-label', true)
+		.attr('x', function(d, i){
+			return x(d.value);
+		})
+		// we can 'nudge' the text left or right 
+		.attr('dx', -4)
+		.attr('y', function(d, i){
+			return y(d.key);
+		})
+		.attr("dy", function(d, i){
+			// First get the Halfway point which is 1/1.5, then add +2 to nudge it 2 pixels down
+			return y.rangeBand()/1.5+2;
+		})
+		.text(function(d, i){
+			return d.value;
+		});
+	// Here we are attaching the labels the chart, this refers to chart
+	// containing everything within a group 
+	this.append('g')
+		.classed("x axis", true)
+		// moving the label to the bottom of the chart
+		.attr("transform", "translate(" + 0 + "," + height + ")")
+		// actually calling the xAxis variable to use it
+		.call(xAxis);
+	
+	this.append('g')
+		.classed("y axis", true)
+		.attr("transform", "translate(0,0")
+		.call(yAxis);
+}
+
+// This will draw our chart object
+plot.call(chart, {
+	data: data
+});
+
+
+
+
+
+// var w = 800;
+// var h = 450;
+// var data = [132,71,337,93,78,43,20,16,30,8,17,21];
+// var x = d3.scale.linear()
+// 		.domain([0,d3.max(data)])
+// 		.range([0,w]);
+// var y = d3.scale.linear()
+// 		.domain([0,data.length])
+// 		.range([0,h]);
+// var svg = d3.select("body").append("svg")
+// 			.attr("id", "chart")
+// 			.attr("width", w)
+// 			.attr("height", h);
+
+// function plot(params){
+// 	this.selectAll(".bar")
+// 		.data(params.data)
+// 		.enter()
+// 			.append("rect")
+// 			.classed("bar", true)
+// 			.attr("x", 0)
+// 			.attr("y", function(d,i){
+// 				return y(i);
+// 			})
+// 			.attr("width", function(d,i){
+// 				return x(d);
+// 			})
+// 			.attr("height", function(d,i){
+// 				return y(1)-1;
+// 			});
+// 	this.selectAll(".bar-label")
+// 		.data(params.data)
+// 		.enter()
+// 			.append("text")
+// 			.classed("bar-label", true)
+// 			.attr("x", function(d,i){
+// 				return x(d);
+// 			})
+// 			.attr("dx", -4)
+// 			.attr("y", function(d,i){
+// 				return y(i);
+// 			})
+// 			.attr("dy", function(d,i){
+// 				return y(1)/1.5+2;
+// 			})
+// 			.text(function(d,i){
+// 				return d;
+// 			});
+// }
+// plot.call(svg, {
+// 	data: data
+// });
+</script>	
+</body>
+</html>
